@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tablero Gerencial · Renovación y Postulación de Listas MASC 2026</title>
+
+  <!-- Tipografía Ejecutiva: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            navy: {
+              950: '#09182B',
+              900: '#0F2744',
+              800: '#16355B',
+              700: '#1E40AF',
+            },
+            brandTeal: '#0D9488',
+            brandIndigo: '#1E40AF',
+            brandCoral: '#E11D48',
+            brandAmber: '#D97706',
+          },
+          boxShadow: {
+            card: '0 1px 3px rgba(15, 39, 68, 0.05), 0 4px 14px rgba(15, 39, 68, 0.04)',
+            cardHover: '0 4px 12px rgba(15, 39, 68, 0.08), 0 8px 24px rgba(15, 39, 68, 0.05)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Chart.js & DataLabels Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      background-color: #F4F6FA;
+      color: #0F172A;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Encabezado corporativo con textura geométrica muy sutil */
+    .exec-header {
+      background: linear-gradient(135deg, #09182B 0%, #0F2744 55%, #16355B 100%);
+      position: relative;
+    }
+
+    .exec-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #D97706 0%, #F59E0B 35%, #0D9488 70%, #1E40AF 100%);
+    }
+
+    /* Toggle Switch personalizado */
+    .switch-track {
+      transition: background-color 0.2s ease;
+    }
+    .switch-thumb {
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    input:checked + .switch-track {
+      background-color: #D97706;
+    }
+    input:checked + .switch-track .switch-thumb {
+      transform: translateX(1.125rem);
+    }
+
+    /* Scrollbar sutil en tablas horizontales */
+    .custom-scroll::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #F1F5F9;
+      border-radius: 999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    /* Animación suave para toast */
+    @keyframes slideInToast {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .toast-animate {
+      animation: slideInToast 0.25s ease-out forwards;
+    }
+
+    /* Optimización profesional para Impresión / Exportar a PDF */
+    @media print {
+      @page {
+        size: landscape;
+        margin: 10mm;
+      }
+      body {
+        background-color: #FFFFFF !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        font-size: 11px !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: flex !important;
+      }
+      .print-break-inside-avoid {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .print-break-before {
+        break-before: page !important;
+        page-break-before: always !important;
+      }
+      .shadow-card, .shadow-sm, .shadow-md {
+        box-shadow: none !important;
+      }
+      .exec-header {
+        border-radius: 12px !important;
+        margin-bottom: 12px !important;
+      }
+      canvas {
+        max-width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Contenedor de notificaciones Toast (sin usar alert()) -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-md no-print pointer-events-none"></div>
+
+  <!-- Input de archivo oculto para carga de nuevo CSV -->
+  <input id="csvFileInput" type="file" accept=".csv,text/csv" class="hidden" />
+
+  <!-- ===================================================================== -->
+  <!-- 1. BARRA SUPERIOR EJECUTIVA                                           -->
+  <!-- ===================================================================== -->
+  <header class="exec-header text-white">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+      <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+        <!-- Identidad y título -->
+        <div class="flex items-start gap-3.5">
+          <div class="shrink-0 w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center backdrop-blur-sm mt-0.5">
+            <i data-lucide="bar-chart-3" class="w-6 h-6 text-amber-400"></i>
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2.5 mb-1">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide uppercase bg-amber-500/15 text-amber-300 border border-amber-400/30">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                <span id="headerCutoffBadge">Corte: 23 Nov 2026 · Excluye ANULADO POR DUPLICIDAD</span>
+              </span>
+              <span id="customCsvBadge" class="hidden inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-teal-500/20 text-teal-200 border border-teal-400/30">
+                <i data-lucide="file-spreadsheet" class="w-3 h-3"></i>
+                <span id="customCsvName">CSV Cargado</span>
+              </span>
+            </div>
+            <h1 class="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight">
+              Tablero Gerencial · Postulantes por Lista
+            </h1>
+            <p id="headerSubtitle" class="text-slate-300 text-xs sm:text-sm mt-1">
+              Base depurada: excluye radicados con estado ANULADO POR DUPLICIDAD (26 excluidos de 808 totales)
+            </p>
+          </div>
+        </div>
+
+        <!-- Botones de acción ejecutiva -->
+        <div class="flex flex-wrap items-center gap-2.5 no-print">
+          <button id="btnResetData" type="button" class="hidden items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-amber-200 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 transition cursor-pointer">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Restaurar base 23 Nov</span>
+          </button>
+
+          <button id="btnUploadCsv" type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-teal-600 hover:bg-teal-500 border border-teal-400/30 shadow-sm transition cursor-pointer">
+            <i data-lucide="upload" class="w-4 h-4"></i>
+            <span>Cargar nuevo CSV</span>
+          </button>
+
+          <button id="btnDownloadCsv" type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-100 bg-white/10 hover:bg-white/15 border border-white/15 transition cursor-pointer">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Descargar Tabla CSV</span>
+          </button>
+
+          <button id="btnPrintPdf" type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-navy-950 bg-amber-400 hover:bg-amber-300 shadow-sm transition cursor-pointer">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Exportar / Imprimir PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- BARRA DE FILTROS Y GOBERNANZA                                         -->
+  <!-- ===================================================================== -->
+  <section class="bg-white border-b border-slate-200/90 sticky top-0 z-30 shadow-[0_2px_10px_rgba(15,39,68,0.03)] no-print">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <!-- Pills de Línea de Servicio -->
+      <div class="flex items-center gap-2 overflow-x-auto custom-scroll pb-1 lg:pb-0">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 shrink-0 mr-1 flex items-center gap-1">
+          <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+          Línea:
+        </span>
+        <div id="lineFilterPills" class="flex items-center gap-1.5"></div>
+      </div>
+
+      <!-- Toggle inteligente de depuración adicional -->
+      <div class="flex items-center justify-between lg:justify-end gap-3 shrink-0 bg-amber-50/80 border border-amber-200/80 rounded-xl px-3.5 py-2">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600 shrink-0"></i>
+          <div class="leading-tight">
+            <label for="toggleIntentos" class="text-xs font-semibold text-slate-800 cursor-pointer select-none block">
+              Excluir también <span id="toggleIntentosCount">14</span> intentos anteriores sin anular
+            </label>
+            <span class="text-[11px] text-amber-800/85 block">
+              Registros con Alerta_Duplicado = "INTENTO ANTERIOR" aún pendientes/rechazados
+            </span>
+          </div>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1" title="Simular exclusión de intentos previos aún no anulados">
+          <input id="toggleIntentos" type="checkbox" class="sr-only" />
+          <div class="switch-track w-10 h-5.5 bg-slate-300 rounded-full p-0.5 flex items-center">
+            <div class="switch-thumb w-4.5 h-4.5 bg-white rounded-full shadow-sm"></div>
+          </div>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- Resumen de filtros solo visible al imprimir -->
+  <div id="printFilterSummary" class="hidden print-only max-w-[1440px] mx-auto px-6 py-2 text-xs text-slate-600 justify-between border-b border-slate-200">
+    <span id="printFilterText">Vista: Todas las líneas · Depuración estricta (excluye ANULADO POR DUPLICIDAD)</span>
+    <span id="printTimestamp">Generado: 23 Nov 2026</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- CONTENIDO PRINCIPAL DEL DASHBOARD                                     -->
+  <!-- ===================================================================== -->
+  <main class="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
+
+    <!-- 2. FILA DE 5 TARJETAS KPI GERENCIALES -->
+    <section aria-label="Indicadores Clave de Desempeño" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <!-- KPI 1: Postulaciones Válidas (Neto) -->
+      <article class="bg-white rounded-2xl border border-slate-200/90 shadow-card hover:shadow-cardHover transition-shadow p-5 relative overflow-hidden print-break-inside-avoid">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-navy-900"></div>
+        <div class="flex items-start justify-between gap-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Postulaciones Válidas</span>
+          <span class="w-8 h-8 rounded-lg bg-slate-100 text-navy-900 flex items-center justify-center shrink-0">
+            <i data-lucide="file-check-2" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="mt-2.5 flex items-baseline gap-2">
+          <span id="kpiNeto" class="font-display text-3xl font-extrabold text-navy-900 tabular-nums">782</span>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Neto</span>
+        </div>
+        <p id="kpiNetoSub" class="mt-2.5 text-xs text-slate-500 leading-relaxed tabular-nums">
+          De <strong class="text-slate-700">808</strong> radicados totales · <span class="text-rose-600 font-semibold">-26 anulados (-3,2%)</span>
+        </p>
+      </article>
+
+      <!-- KPI 2: Nuevos Postulantes -->
+      <article class="bg-white rounded-2xl border border-slate-200/90 shadow-card hover:shadow-cardHover transition-shadow p-5 relative overflow-hidden print-break-inside-avoid">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-teal-600"></div>
+        <div class="flex items-start justify-between gap-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Nuevos Postulantes</span>
+          <span class="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="mt-2.5 flex items-baseline gap-2">
+          <span id="kpiNuevos" class="font-display text-3xl font-extrabold text-teal-700 tabular-nums">432</span>
+          <span id="kpiNuevosPct" class="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 tabular-nums">55,2%</span>
+        </div>
+        <div class="mt-3">
+          <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div id="kpiNuevosBar" class="h-full bg-teal-600 rounded-full transition-all duration-500" style="width: 55.2%"></div>
+          </div>
+          <p class="mt-1.5 text-[11px] text-slate-500">Participación sobre base válida</p>
+        </div>
+      </article>
+
+      <!-- KPI 3: Renovación -->
+      <article class="bg-white rounded-2xl border border-slate-200/90 shadow-card hover:shadow-cardHover transition-shadow p-5 relative overflow-hidden print-break-inside-avoid">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-blue-800"></div>
+        <div class="flex items-start justify-between gap-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Renovación</span>
+          <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-800 flex items-center justify-center shrink-0">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="mt-2.5 flex items-baseline gap-2">
+          <span id="kpiRenovacion" class="font-display text-3xl font-extrabold text-blue-800 tabular-nums">350</span>
+          <span id="kpiRenovacionPct" class="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 tabular-nums">44,8%</span>
+        </div>
+        <div class="mt-3">
+          <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div id="kpiRenovacionBar" class="h-full bg-blue-800 rounded-full transition-all duration-500" style="width: 44.8%"></div>
+          </div>
+          <p class="mt-1.5 text-[11px] text-slate-500">Retención sobre base válida</p>
+        </div>
+      </article>
+
+      <!-- KPI 4: Profesionales Únicos -->
+      <article class="bg-white rounded-2xl border border-slate-200/90 shadow-card hover:shadow-cardHover transition-shadow p-5 relative overflow-hidden print-break-inside-avoid">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-indigo-600"></div>
+        <div class="flex items-start justify-between gap-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Profesionales Únicos</span>
+          <span class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+            <i data-lucide="users" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="mt-2.5 flex items-baseline gap-2">
+          <span id="kpiUnicos" class="font-display text-3xl font-extrabold text-slate-900 tabular-nums">509</span>
+          <span id="kpiUnicosBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 tabular-nums">1,54 / pers.</span>
+        </div>
+        <p id="kpiUnicosSub" class="mt-2.5 text-xs text-slate-500 leading-relaxed tabular-nums">
+          Promedio <strong class="text-slate-700">1,54</strong> listas/persona · <strong class="text-slate-700">170</strong> multilista
+        </p>
+      </article>
+
+      <!-- KPI 5: Avance Revisión Humana -->
+      <article class="bg-white rounded-2xl border border-slate-200/90 shadow-card hover:shadow-cardHover transition-shadow p-5 relative overflow-hidden sm:col-span-2 lg:col-span-2 xl:col-span-1 print-break-inside-avoid">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-amber-500"></div>
+        <div class="flex items-start justify-between gap-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Avance Revisión</span>
+          <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+          </span>
+        </div>
+        <div class="mt-2.5 flex items-baseline gap-2">
+          <span id="kpiAvancePct" class="font-display text-3xl font-extrabold text-slate-900 tabular-nums">19,8%</span>
+          <span id="kpiAvanceCount" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 tabular-nums">155 rev.</span>
+        </div>
+        <!-- Mini barra segmentada de estados -->
+        <div class="mt-2.5 w-full h-2 bg-slate-100 rounded-full overflow-hidden flex">
+          <div id="revBarAprob" class="h-full bg-emerald-500 transition-all duration-500" style="width: 10.4%" title="Aprobados"></div>
+          <div id="revBarSubs" class="h-full bg-amber-400 transition-all duration-500" style="width: 2.9%" title="Subsanación"></div>
+          <div id="revBarRech" class="h-full bg-rose-500 transition-all duration-500" style="width: 6.5%" title="Rechazados"></div>
+        </div>
+        <p id="kpiAvanceSub" class="mt-1.5 text-[11px] text-slate-500 leading-snug tabular-nums">
+          <span class="text-emerald-700 font-semibold">81 aprob.</span> · <span class="text-rose-600 font-semibold">51 rech.</span> · <span class="text-amber-700 font-semibold">23 subs.</span> · 627 pend.
+        </p>
+      </article>
+    </section>
+
+    <!-- 3. SECCIÓN PRINCIPAL DE GRÁFICOS (8 COLS + 4 COLS) -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Gráfico Principal: Barras Horizontales por Lista (8 cols) -->
+      <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200/90 shadow-card p-5 sm:p-6 flex flex-col print-break-inside-avoid">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div>
+            <h2 class="font-display text-base sm:text-lg font-bold text-navy-900">
+              Postulantes por Lista · Nuevo vs. Renovación
+            </h2>
+            <p id="mainChartSubtitle" class="text-xs text-slate-500 mt-0.5">
+              Ordenado de mayor a menor volumen neto · 10 listas activas
+            </p>
+          </div>
+
+          <!-- Switcher de vistas del gráfico principal -->
+          <div class="inline-flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto no-print" role="group" aria-label="Modo de visualización">
+            <button data-chart-mode="stacked" class="chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer bg-white text-navy-900 shadow-sm">
+              Apilado
+            </button>
+            <button data-chart-mode="grouped" class="chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-600 hover:text-navy-900">
+              Agrupado
+            </button>
+            <button data-chart-mode="percent" class="chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-600 hover:text-navy-900">
+              Composición 100%
+            </button>
+          </div>
+        </div>
+
+        <!-- Leyenda ejecutiva limpia -->
+        <div class="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600 mb-3 pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-sm bg-teal-600"></span>
+            <span>Nuevos Postulantes</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-sm bg-blue-800"></span>
+            <span>Renovación</span>
+          </div>
+          <span id="mainChartModeHint" class="text-[11px] text-slate-400 sm:ml-auto">
+            Valores internos y total neto al extremo derecho
+          </span>
+        </div>
+
+        <!-- Canvas Contenedor Responsivo -->
+        <div id="mainChartWrapper" class="relative w-full flex-1 min-h-[410px]">
+          <canvas id="mainListChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfico Secundario: Dona Ejecutiva por Línea de Servicio (4 cols) -->
+      <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200/90 shadow-card p-5 sm:p-6 flex flex-col print-break-inside-avoid">
+        <div class="mb-4">
+          <h2 class="font-display text-base sm:text-lg font-bold text-navy-900">
+            Distribución por Línea de Servicio
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Haz clic en una línea para filtrar el tablero
+          </p>
+        </div>
+
+        <!-- Dona con KPI central dinámico -->
+        <div class="relative w-full h-[225px] flex items-center justify-center my-1">
+          <canvas id="serviceLineDonut"></canvas>
+          <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span id="donutCenterValue" class="font-display text-3xl font-extrabold text-navy-900 tabular-nums leading-none">782</span>
+            <span id="donutCenterLabel" class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mt-1">Válidas</span>
+          </div>
+        </div>
+
+        <!-- Leyenda interactiva detallada -->
+        <div id="donutLegendList" class="mt-4 pt-3 border-t border-slate-100 space-y-2 flex-1"></div>
+      </div>
+    </section>
+
+    <!-- 4. SEGUNDA FILA ANALÍTICA (7 COLS + 5 COLS) -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Curva de Radicación Diaria (7 cols) -->
+      <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 shadow-card p-5 sm:p-6 flex flex-col print-break-inside-avoid">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+          <div>
+            <h2 class="font-display text-base sm:text-lg font-bold text-navy-900">
+              Curva de Radicación Diaria
+            </h2>
+            <p id="dailyChartSubtitle" class="text-xs text-slate-500 mt-0.5">
+              Evolución diaria (25 Sep – 06 Nov 2026) · Nuevos vs. Renovación
+            </p>
+          </div>
+
+          <!-- Badge destacado del pico de cierre -->
+          <div id="peakCalloutBadge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/90 text-amber-900 text-xs shrink-0">
+            <i data-lucide="trending-up" class="w-4 h-4 text-amber-600 shrink-0"></i>
+            <div class="leading-tight tabular-nums">
+              <span class="font-bold">Pico cierre 28–30 Oct:</span> 399 (<span class="font-semibold">51,0%</span>)
+              <span class="block text-[11px] text-amber-700">Máximo el 30 Oct con 207 postulaciones</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nota si se filtra en modo precargado -->
+        <div id="dailyFilterNotice" class="hidden mb-3 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-center gap-1.5">
+          <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+          <span>La serie diaria precargada refleja el consolidado global depurado (782). Carga el CSV para desagregar la curva diaria por línea o filtro.</span>
+        </div>
+
+        <div class="relative w-full flex-1 min-h-[285px]">
+          <canvas id="dailyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Panel de Hallazgos Clave & Gobernanza (5 cols) -->
+      <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 shadow-card p-5 sm:p-6 flex flex-col print-break-inside-avoid">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="font-display text-base sm:text-lg font-bold text-navy-900">
+              Hallazgos Clave & Gobernanza
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Síntesis ejecutiva para comité directivo
+            </p>
+          </div>
+          <span class="w-8 h-8 rounded-lg bg-navy-900/5 text-navy-900 flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+          </span>
+        </div>
+
+        <div id="insightsContainer" class="space-y-3 flex-1 flex flex-col justify-between">
+          <!-- Renderizado dinámico con métricas precisas -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. TABLA GERENCIAL DETALLADA E INTERACTIVA (ANCHO COMPLETO) -->
+    <section class="bg-white rounded-2xl border border-slate-200/90 shadow-card overflow-hidden print-break-before">
+      <div class="p-5 sm:p-6 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 class="font-display text-base sm:text-lg font-bold text-navy-900">
+            Detalle Gerencial por Lista MASC
+          </h2>
+          <p id="tableSubtitle" class="text-xs text-slate-500 mt-0.5">
+            Haz clic en cualquier encabezado para ordenar · Cifras netas excluyendo ANULADO POR DUPLICIDAD
+          </p>
+        </div>
+
+        <!-- Buscador rápido en tabla -->
+        <div class="relative w-full sm:w-64 no-print">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+          <input
+            id="tableSearchInput"
+            type="text"
+            placeholder="Buscar lista o código..."
+            class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900/40 transition"
+          />
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scroll">
+        <table class="w-full text-left border-collapse min-w-[980px]">
+          <thead>
+            <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
+              <th data-sort="nombre" class="sortable-th py-3.5 pl-5 pr-3 cursor-pointer hover:text-navy-900 transition">
+                <div class="flex items-center gap-1">
+                  <span>Lista</span>
+                  <span class="sort-icon text-slate-300">↕</span>
+                </div>
+              </th>
+              <th data-sort="linea" class="sortable-th py-3.5 px-3 cursor-pointer hover:text-navy-900 transition">
+                <div class="flex items-center gap-1">
+                  <span>Línea</span>
+                  <span class="sort-icon text-slate-300">↕</span>
+                </div>
+              </th>
+              <th data-sort="nuevo" class="sortable-th py-3.5 px-3 text-right cursor-pointer hover:text-navy-900 transition">
+                <div class="flex items-center justify-end gap-1">
+                  <span>Nuevos</span>
+                  <span class="sort-icon text-slate-300">↕</span>
+                </div>
+              </th>
+              <th data-sort="renovacion" class="sortable-th py-3.5 px-3 text-right cursor-pointer hover:text-navy-900 transition">
+                <div class="flex items-center justify-end gap-1">
+                  <span>Renovación</span>
+                  <span class="sort-icon text-slate-300">↕</span>
+                </div>
+              </th>
+              <th data-sort="total" class="sortable-th py-3.5 px-3 text-right cursor-pointer hover:text-navy-900 transition">
+                <div class="flex items-center justify-end gap-1">
+                  <span>Total Neto</span>
+                  <span class="sort-icon text-navy-900">↓</span>
+                </div>
+              </th>
+              <th data-sort="participacion" class="sortable-th py-3.5 px-3 text-right cursor-pointer hover:text-navy-900 transition">
+                <div class="flex items-center justify-end gap-1">
+                  <span>% Part.</span>
+                  <span class="sort-icon text-slate-300">↕</span>
+                </div>
+              </th>
+              <th data-sort="pctNuevo" class="sortable-th py-3.5 px-4 cursor-pointer hover:text-navy-900 transition w-48">
+                <div class="flex items-center gap-1">
+                  <span>Mezcla (% Nuevo / Renov.)</span>
+                  <span class="sort-icon text-slate-300">↕</span>
+                </div>
+              </th>
+              <th data-sort="anulados" class="sortable-th py-3.5 px-3 text-right cursor-pointer hover:text-navy-900 transition">
+                <div class="flex items-center justify-end gap-1">
+                  <span>Anulados Excl.</span>
+                  <span class="sort-icon text-slate-300">↕</span>
+                </div>
+              </th>
+              <th data-sort="avanceRev" class="sortable-th py-3.5 pl-3 pr-5 text-right cursor-pointer hover:text-navy-900 transition w-40">
+                <div class="flex items-center justify-end gap-1">
+                  <span>Avance Rev.</span>
+                  <span class="sort-icon text-slate-300">↕</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="executiveTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+          <tfoot id="executiveTableFoot" class="bg-navy-900 text-white font-semibold text-sm"></tfoot>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Pie institucional -->
+  <footer class="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-slate-200/70">
+    <span>Tablero Gerencial · Renovación y Postulación de Listas MASC 2026</span>
+    <span id="footerSourceLabel" class="tabular-nums">Fuente precargada: 2026-11-23T15-45_export.csv (808 radicados · 782 válidos netos)</span>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- LÓGICA JAVASCRIPT AUTOCONTENIDA                                       -->
+  <!-- ===================================================================== -->
+  <script>
+    'use strict';
+
+    // Registrar plugin de etiquetas de Chart.js
+    Chart.register(ChartDataLabels);
+
+    // =========================================================================
+    // 1. CATÁLOGO DE LISTAS Y PALETA SEMÁNTICA
+    // =========================================================================
+    const COLORS = {
+      nuevo: '#0D9488',
+      nuevoHover: '#0F766E',
+      renovacion: '#1E40AF',
+      renovacionHover: '#1E3A8A',
+      coral: '#E11D48',
+      amber: '#D97706',
+      navy: '#0F2744',
+      lines: {
+        'Arbitraje': '#0F2744',
+        'Secretarios': '#0D9488',
+        'Conciliación': '#1E40AF',
+        'Amigable Composición': '#D97706',
+        'Peritos': '#64748B',
+        'Otras': '#7C3AED'
+      },
+      lineBadge: {
+        'Arbitraje': 'bg-slate-100 text-slate-800 border-slate-200',
+        'Secretarios': 'bg-teal-50 text-teal-800 border-teal-200',
+        'Conciliación': 'bg-blue-50 text-blue-800 border-blue-200',
+        'Amigable Composición': 'bg-amber-50 text-amber-800 border-amber-200',
+        'Peritos': 'bg-zinc-100 text-zinc-700 border-zinc-200',
+        'Otras': 'bg-purple-50 text-purple-800 border-purple-200'
+      }
+    };
+
+    const LIST_CATALOG = {
+      'arb-a': { nombre: 'Árbitros Lista A', linea: 'Arbitraje' },
+      'arb-b': { nombre: 'Árbitros Lista B', linea: 'Arbitraje' },
+      'secretario': { nombre: 'Secretarios de Tribunal', linea: 'Secretarios' },
+      'conc-derecho': { nombre: 'Conciliadores en Derecho', linea: 'Conciliación' },
+      'amig-natural': { nombre: 'Amigables Componedores (P. Natural)', linea: 'Amigable Composición' },
+      'arb-ejecutivo': { nombre: 'Árbitros Ejecutivos', linea: 'Arbitraje' },
+      'conc-insolvencia': { nombre: 'Conciliadores en Insolvencia', linea: 'Conciliación' },
+      'peritos': { nombre: 'Peritos', linea: 'Peritos' },
+      'conc-apoyo': { nombre: 'Conciliadores de Apoyo', linea: 'Conciliación' },
+      'amig-juridica': { nombre: 'Amigables Componedores (P. Jurídica)', linea: 'Amigable Composición' }
+    };
+
+    const LINE_ORDER = ['Arbitraje', 'Secretarios', 'Conciliación', 'Amigable Composición', 'Peritos'];
+
+    // =========================================================================
+    // 2. DATOS EXACTOS VERIFICADOS PRECARGADOS (2026-11-23T15-45_export.csv)
+    // =========================================================================
+    const PRELOADED_DATA = {
+      sourceName: '2026-11-23T15-45_export.csv',
+      cutoffLabel: 'Corte: 23 Nov 2026 · Excluye ANULADO POR DUPLICIDAD',
+      totalCsvRows: 808,
+      anuladosTotal: 26,
+      anuladosNuevo: 11,
+      anuladosRenovacion: 15,
+      unicosTotal: 509,
+      multilistaTotal: 170,
+      listas: [
+        {
+          codigo: 'arb-a',
+          nombre: 'Árbitros Lista A',
+          linea: 'Arbitraje',
+          nuevo: 102,
+          renovacion: 154,
+          anulados: 11,
+          intentosAnt: { nuevo: 1, renovacion: 1 },
+          revision: { aprobado: 2, pendiente: 249, rechazado: 2, subsanacion: 3 }
+        },
+        {
+          codigo: 'arb-b',
+          nombre: 'Árbitros Lista B',
+          linea: 'Arbitraje',
+          nuevo: 91,
+          renovacion: 53,
+          anulados: 4,
+          intentosAnt: { nuevo: 2, renovacion: 1 },
+          revision: { aprobado: 0, pendiente: 143, rechazado: 0, subsanacion: 1 }
+        },
+        {
+          codigo: 'secretario',
+          nombre: 'Secretarios de Tribunal',
+          linea: 'Secretarios',
+          nuevo: 81,
+          renovacion: 43,
+          anulados: 6,
+          intentosAnt: { nuevo: 0, renovacion: 0 },
+          revision: { aprobado: 13, pendiente: 92, rechazado: 13, subsanacion: 6 }
+        },
+        {
+          codigo: 'conc-derecho',
+          nombre: 'Conciliadores en Derecho',
+          linea: 'Conciliación',
+          nuevo: 38,
+          renovacion: 40,
+          anulados: 4,
+          intentosAnt: { nuevo: 1, renovacion: 4 },
+          revision: { aprobado: 45, pendiente: 4, rechazado: 25, subsanacion: 4 }
+        },
+        {
+          codigo: 'amig-natural',
+          nombre: 'Amigables Componedores (P. Natural)',
+          linea: 'Amigable Composición',
+          nuevo: 38,
+          renovacion: 31,
+          anulados: 0,
+          intentosAnt: { nuevo: 0, renovacion: 0 },
+          revision: { aprobado: 0, pendiente: 61, rechazado: 0, subsanacion: 8 }
+        },
+        {
+          codigo: 'arb-ejecutivo',
+          nombre: 'Árbitros Ejecutivos',
+          linea: 'Arbitraje',
+          nuevo: 59,
+          renovacion: 3,
+          anulados: 0,
+          intentosAnt: { nuevo: 2, renovacion: 0 },
+          revision: { aprobado: 0, pendiente: 61, rechazado: 1, subsanacion: 0 }
+        },
+        {
+          codigo: 'conc-insolvencia',
+          nombre: 'Conciliadores en Insolvencia',
+          linea: 'Conciliación',
+          nuevo: 12,
+          renovacion: 10,
+          anulados: 0,
+          intentosAnt: { nuevo: 0, renovacion: 1 },
+          revision: { aprobado: 12, pendiente: 1, rechazado: 9, subsanacion: 0 }
+        },
+        {
+          codigo: 'peritos',
+          nombre: 'Peritos',
+          linea: 'Peritos',
+          nuevo: 6,
+          renovacion: 7,
+          anulados: 0,
+          intentosAnt: { nuevo: 0, renovacion: 0 },
+          revision: { aprobado: 0, pendiente: 13, rechazado: 0, subsanacion: 0 }
+        },
+        {
+          codigo: 'conc-apoyo',
+          nombre: 'Conciliadores de Apoyo',
+          linea: 'Conciliación',
+          nuevo: 2,
+          renovacion: 9,
+          anulados: 1,
+          intentosAnt: { nuevo: 0, renovacion: 1 },
+          revision: { aprobado: 9, pendiente: 1, rechazado: 1, subsanacion: 0 }
+        },
+        {
+          codigo: 'amig-juridica',
+          nombre: 'Amigables Componedores (P. Jurídica)',
+          linea: 'Amigable Composición',
+          nuevo: 3,
+          renovacion: 0,
+          anulados: 0,
+          intentosAnt: { nuevo: 0, renovacion: 0 },
+          revision: { aprobado: 0, pendiente: 2, rechazado: 0, subsanacion: 1 }
+        }
+      ],
+      dailySeries: [
+        {"fecha":"2026-09-25","nuevo":0,"renovacion":1},
+        {"fecha":"2026-09-27","nuevo":2,"renovacion":2},
+        {"fecha":"2026-09-28","nuevo":2,"renovacion":3},
+        {"fecha":"2026-09-29","nuevo":0,"renovacion":2},
+        {"fecha":"2026-09-30","nuevo":4,"renovacion":4},
+        {"fecha":"2026-10-01","nuevo":7,"renovacion":5},
+        {"fecha":"2026-10-02","nuevo":7,"renovacion":0},
+        {"fecha":"2026-10-03","nuevo":1,"renovacion":0},
+        {"fecha":"2026-10-05","nuevo":2,"renovacion":0},
+        {"fecha":"2026-10-06","nuevo":10,"renovacion":2},
+        {"fecha":"2026-10-07","nuevo":9,"renovacion":3},
+        {"fecha":"2026-10-08","nuevo":4,"renovacion":2},
+        {"fecha":"2026-10-09","nuevo":3,"renovacion":7},
+        {"fecha":"2026-10-10","nuevo":1,"renovacion":0},
+        {"fecha":"2026-10-11","nuevo":2,"renovacion":0},
+        {"fecha":"2026-10-12","nuevo":3,"renovacion":3},
+        {"fecha":"2026-10-13","nuevo":7,"renovacion":9},
+        {"fecha":"2026-10-14","nuevo":6,"renovacion":8},
+        {"fecha":"2026-10-15","nuevo":7,"renovacion":10},
+        {"fecha":"2026-10-16","nuevo":11,"renovacion":7},
+        {"fecha":"2026-10-17","nuevo":1,"renovacion":1},
+        {"fecha":"2026-10-18","nuevo":2,"renovacion":0},
+        {"fecha":"2026-10-19","nuevo":3,"renovacion":1},
+        {"fecha":"2026-10-20","nuevo":13,"renovacion":24},
+        {"fecha":"2026-10-21","nuevo":9,"renovacion":11},
+        {"fecha":"2026-10-22","nuevo":5,"renovacion":11},
+        {"fecha":"2026-10-23","nuevo":16,"renovacion":7},
+        {"fecha":"2026-10-24","nuevo":2,"renovacion":1},
+        {"fecha":"2026-10-25","nuevo":1,"renovacion":4},
+        {"fecha":"2026-10-26","nuevo":14,"renovacion":22},
+        {"fecha":"2026-10-27","nuevo":25,"renovacion":22},
+        {"fecha":"2026-10-28","nuevo":49,"renovacion":31},
+        {"fecha":"2026-10-29","nuevo":57,"renovacion":55},
+        {"fecha":"2026-10-30","nuevo":142,"renovacion":65},
+        {"fecha":"2026-10-31","nuevo":2,"renovacion":1},
+        {"fecha":"2026-11-02","nuevo":1,"renovacion":1},
+        {"fecha":"2026-11-03","nuevo":0,"renovacion":1},
+        {"fecha":"2026-11-04","nuevo":0,"renovacion":3},
+        {"fecha":"2026-11-05","nuevo":0,"renovacion":4},
+        {"fecha":"2026-11-06","nuevo":2,"renovacion":17}
+      ]
+    };
+
+    // =========================================================================
+    // 3. ESTADO GLOBAL DE LA APLICACIÓN
+    // =========================================================================
+    const state = {
+      isCustomCsv: false,
+      customFileName: '',
+      rawRows: null,           // Arreglo de filas normalizadas cuando se carga CSV
+      selectedLine: 'Todas',   // 'Todas' | 'Arbitraje' | 'Secretarios' | ...
+      excludeIntentos: false,  // Switch de gobernanza (desactivado por defecto)
+      chartMode: 'stacked',    // 'stacked' | 'grouped' | 'percent'
+      sortKey: 'total',        // Columna activa de ordenamiento
+      sortDir: 'desc',         // 'asc' | 'desc'
+      tableQuery: '',          // Filtro de búsqueda en tabla
+      charts: {
+        main: null,
+        donut: null,
+        daily: null
+      }
+    };
+
+    // =========================================================================
+    // 4. UTILIDADES DE FORMATO Y NOTIFICACIONES
+    // =========================================================================
+    function fmtInt(n) {
+      return Number(n || 0).toLocaleString('es-CO');
+    }
+
+    function fmtPct(n, decimals = 1) {
+      return Number(n || 0).toLocaleString('es-CO', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      }) + '%';
+    }
+
+    function fmtDec(n, decimals = 2) {
+      return Number(n || 0).toLocaleString('es-CO', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function formatShortDate(isoDate) {
+      if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate || '';
+      const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      const parts = isoDate.split('-');
+      const d = parseInt(parts[2], 10);
+      const m = months[parseInt(parts[1], 10) - 1] || parts[1];
+      return `${String(d).padStart(2, '0')} ${m}`;
+    }
+
+    function normalizeText(str) {
+      return String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toUpperCase();
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const palette = {
+        success: 'bg-navy-900 text-white border-teal-400/50',
+        error: 'bg-rose-700 text-white border-rose-400/50',
+        info: 'bg-navy-900 text-white border-amber-400/50'
+      };
+      const iconName = type === 'success' ? 'check-circle-2' : type === 'error' ? 'alert-octagon' : 'info';
+      const iconColor = type === 'success' ? 'text-teal-400' : type === 'error' ? 'text-rose-200' : 'text-amber-400';
+
+      const toast = document.createElement('div');
+      toast.className = `toast-animate pointer-events-auto flex items-start gap-2.5 px-4 py-3 rounded-xl border shadow-lg text-xs sm:text-sm ${palette[type] || palette.info}`;
+      toast.innerHTML = `
+        <i data-lucide="${iconName}" class="w-4 h-4 mt-0.5 shrink-0 ${iconColor}"></i>
+        <span class="leading-snug">${message}</span>
+      `;
+      container.appendChild(toast);
+      if (window.lucide) lucide.createIcons();
+
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => toast.remove(), 260);
+      }, 4200);
+    }
+
+    // =========================================================================
+    // 5. PARSER CSV ROBUSTO (UTF-8 BOM, COMILLAS, AUTO-DELIMITADOR)
+    // =========================================================================
+    function parseCSVText(rawText) {
+      // Remover UTF-8 BOM si existe
+      const text = rawText.replace(/^\uFEFF/, '');
+      if (!text.trim()) throw new Error('El archivo CSV está vacío.');
+
+      // Detectar separador más probable en la primera línea (',' vs ';')
+      const firstLineEnd = text.search(/\r?\n/);
+      const headerSample = firstLineEnd === -1 ? text : text.slice(0, firstLineEnd);
+      const commaCount = (headerSample.match(/,/g) || []).length;
+      const semiCount = (headerSample.match(/;/g) || []).length;
+      const delimiter = semiCount > commaCount ? ';' : ',';
+
+      const rows = [];
+      let row = [];
+      let field = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i + 1];
+
+        if (inQuotes) {
+          if (ch === '"' && next === '"') {
+            field += '"';
+            i++;
+          } else if (ch === '"') {
+            inQuotes = false;
+          } else {
+            field += ch;
+          }
+        } else {
+          if (ch === '"') {
+            inQuotes = true;
+          } else if (ch === delimiter) {
+            row.push(field.trim());
+            field = '';
+          } else if (ch === '\r' && next === '\n') {
+            row.push(field.trim());
+            if (row.some(cell => cell !== '')) rows.push(row);
+            row = [];
+            field = '';
+            i++;
+          } else if (ch === '\n' || ch === '\r') {
+            row.push(field.trim());
+            if (row.some(cell => cell !== '')) rows.push(row);
+            row = [];
+            field = '';
+          } else {
+            field += ch;
+          }
+        }
+      }
+      if (field.length > 0 || row.length > 0) {
+        row.push(field.trim());
+        if (row.some(cell => cell !== '')) rows.push(row);
+      }
+
+      if (rows.length < 2) {
+        throw new Error('El CSV no contiene filas de datos válidas.');
+      }
+
+      const headers = rows[0].map(h => normalizeText(h));
+      const findCol = (candidates) => {
+        for (const c of candidates) {
+          const idx = headers.indexOf(normalizeText(c));
+          if (idx !== -1) return idx;
+        }
+        return -1;
+      };
+
+      const colIdx = {
+        radicado: findCol(['Radicado', 'ID_Radicado']),
+        cedula: findCol(['Cedula', 'Cédula', 'Documento', 'Identificacion']),
+        tipo: findCol(['Tipo', 'Tipo_Postulacion', 'Modalidad']),
+        lista: findCol(['Lista', 'Codigo_Lista', 'Lista_MASC']),
+        checkHumano: findCol(['Check_Humano', 'Estado_Revision', 'Estado']),
+        alertaDup: findCol(['Alerta_Duplicado', 'Duplicado', 'Alerta']),
+        fechaHora: findCol(['Fecha_Hora_Radicado', 'Fecha_Radicado', 'Fecha'])
+      };
+
+      if (colIdx.lista === -1 || colIdx.tipo === -1) {
+        throw new Error('Faltan columnas obligatorias en el CSV (se requieren al menos "Lista" y "Tipo").');
+      }
+
+      const parsed = [];
+      for (let r = 1; r < rows.length; r++) {
+        const cols = rows[r];
+        const rawLista = (cols[colIdx.lista] || '').trim().toLowerCase();
+        if (!rawLista) continue;
+
+        const rawTipo = normalizeText(cols[colIdx.tipo] || '');
+        const isRenov = rawTipo.includes('RENOV');
+        const rawCheck = normalizeText(colIdx.checkHumano !== -1 ? cols[colIdx.checkHumano] : '');
+        const rawAlerta = normalizeText(colIdx.alertaDup !== -1 ? cols[colIdx.alertaDup] : '');
+        const rawFecha = colIdx.fechaHora !== -1 ? (cols[colIdx.fechaHora] || '').trim() : '';
+        const cedula = colIdx.cedula !== -1 ? (cols[colIdx.cedula] || '').replace(/[^\w-]/g, '').trim() : '';
+
+        // Extraer fecha YYYY-MM-DD
+        let isoDate = '';
+        const isoMatch = rawFecha.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        const dmyMatch = rawFecha.match(/(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+        if (isoMatch) {
+          isoDate = `${isoMatch[1]}-${isoMatch[2].padStart(2, '0')}-${isoMatch[3].padStart(2, '0')}`;
+        } else if (dmyMatch) {
+          isoDate = `${dmyMatch[3]}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[1].padStart(2, '0')}`;
+        }
+
+        // Clasificar estado revisión humana
+        let revStatus = 'pendiente';
+        const isAnulado = rawCheck.includes('ANULADO') && rawCheck.includes('DUPLIC');
+        if (isAnulado) {
+          revStatus = 'anulado';
+        } else if (rawCheck.includes('APROBAD')) {
+          revStatus = 'aprobado';
+        } else if (rawCheck.includes('RECHAZ')) {
+          revStatus = 'rechazado';
+        } else if (rawCheck.includes('SUBSAN')) {
+          revStatus = 'subsanacion';
+        }
+
+        const isIntentoAnterior = !isAnulado && rawAlerta.includes('INTENTO ANTERIOR');
+
+        const catalogInfo = LIST_CATALOG[rawLista] || {
+          nombre: rawLista.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          linea: 'Otras'
+        };
+
+        parsed.push({
+          radicado: colIdx.radicado !== -1 ? cols[colIdx.radicado] : `ROW-${r}`,
+          cedula,
+          tipo: isRenov ? 'renovacion' : 'nuevo',
+          codigo: rawLista,
+          nombre: catalogInfo.nombre,
+          linea: catalogInfo.linea,
+          isAnulado,
+          isIntentoAnterior,
+          revStatus,
+          fecha: isoDate
+        });
+      }
+
+      if (parsed.length === 0) {
+        throw new Error('No se encontraron registros procesables en el archivo CSV.');
+      }
+
+      return parsed;
+    }
+
+    // =========================================================================
+    // 6. MOTOR DE CÁLCULO DE MÉTRICAS (PRECARGADO O CSV EN VIVO)
+    // =========================================================================
+    function computeDashboardData() {
+      const { isCustomCsv, rawRows, selectedLine, excludeIntentos } = state;
+
+      // A) MODO CSV CARGADO EN VIVO (100% exacto fila por fila)
+      if (isCustomCsv && Array.isArray(rawRows)) {
+        const listMap = new Map();
+        const lineCountsGlobal = {};
+        let totalCsvGlobal = rawRows.length;
+        let anuladosGlobal = 0;
+        let intentosGlobal = 0;
+
+        rawRows.forEach(row => {
+          if (row.isAnulado) anuladosGlobal++;
+          if (row.isIntentoAnterior) intentosGlobal++;
+
+          if (!listMap.has(row.codigo)) {
+            listMap.set(row.codigo, {
+              codigo: row.codigo,
+              nombre: row.nombre,
+              linea: row.linea,
+              nuevo: 0,
+              renovacion: 0,
+              anulados: 0,
+              intentosAnt: { nuevo: 0, renovacion: 0 },
+              revision: { aprobado: 0, pendiente: 0, rechazado: 0, subsanacion: 0 }
+            });
+          }
+          const entry = listMap.get(row.codigo);
+
+          if (row.isAnulado) {
+            entry.anulados++;
+            return;
+          }
+
+          if (row.isIntentoAnterior) {
+            entry.intentosAnt[row.tipo]++;
+            if (excludeIntentos) return;
+          }
+
+          entry[row.tipo]++;
+          if (entry.revision[row.revStatus] !== undefined) {
+            entry.revision[row.revStatus]++;
+          } else {
+            entry.revision.pendiente++;
+          }
+        });
+
+        const allLists = Array.from(listMap.values()).map(item => {
+          const total = item.nuevo + item.renovacion;
+          lineCountsGlobal[item.linea] = (lineCountsGlobal[item.linea] || 0) + total;
+          return { ...item, total };
+        });
+
+        const filteredLists = selectedLine === 'Todas'
+          ? allLists
+          : allLists.filter(l => l.linea === selectedLine);
+
+        // Filtrar filas válidas exactas para métricas de cédulas únicas y curva diaria
+        const validRowsFiltered = rawRows.filter(row => {
+          if (row.isAnulado) return false;
+          if (excludeIntentos && row.isIntentoAnterior) return false;
+          if (selectedLine !== 'Todas' && row.linea !== selectedLine) return false;
+          return true;
+        });
+
+        const totalCsvFiltered = rawRows.filter(row =>
+          selectedLine === 'Todas' || row.linea === selectedLine
+        ).length;
+
+        const anuladosFiltered = rawRows.filter(row =>
+          row.isAnulado && (selectedLine === 'Todas' || row.linea === selectedLine)
+        ).length;
+
+        const intentosFiltered = rawRows.filter(row =>
+          row.isIntentoAnterior && (selectedLine === 'Todas' || row.linea === selectedLine)
+        ).length;
+
+        // Cédulas únicas y multilista exactas
+        const cedulaCount = new Map();
+        validRowsFiltered.forEach(r => {
+          if (!r.cedula) return;
+          cedulaCount.set(r.cedula, (cedulaCount.get(r.cedula) || 0) + 1);
+        });
+        const uniqueCount = cedulaCount.size;
+        let multilistaCount = 0;
+        cedulaCount.forEach(c => { if (c > 1) multilistaCount++; });
+
+        // Serie diaria exacta filtrada
+        const dailyMap = new Map();
+        validRowsFiltered.forEach(r => {
+          if (!r.fecha) return;
+          if (!dailyMap.has(r.fecha)) dailyMap.set(r.fecha, { fecha: r.fecha, nuevo: 0, renovacion: 0 });
+          dailyMap.get(r.fecha)[r.tipo]++;
+        });
+        const dailySeries = Array.from(dailyMap.values()).sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+        return finalizeComputedObject({
+          allLists,
+          filteredLists,
+          lineCountsGlobal,
+          totalCsvGlobal,
+          anuladosGlobal,
+          intentosGlobal,
+          totalCsvFiltered,
+          anuladosFiltered,
+          intentosFiltered,
+          uniqueCount,
+          multilistaCount,
+          uniqueIsExact: true,
+          dailySeries,
+          dailyIsFilteredExact: true
+        });
+      }
+
+      // B) MODO DATOS VERIFICADOS PRECARGADOS (2026-11-23T15-45_export.csv)
+      const lineCountsGlobal = {};
+      let intentosGlobal = 0;
+
+      const allLists = PRELOADED_DATA.listas.map(item => {
+        const intN = item.intentosAnt.nuevo;
+        const intR = item.intentosAnt.renovacion;
+        const intTot = intN + intR;
+        intentosGlobal += intTot;
+
+        const nuevo = excludeIntentos ? Math.max(0, item.nuevo - intN) : item.nuevo;
+        const renovacion = excludeIntentos ? Math.max(0, item.renovacion - intR) : item.renovacion;
+        const total = nuevo + renovacion;
+
+        // Ajustar estado de revisión proporcionalmente si se simula exclusión de los 14 intentos anteriores (que están en Pendiente/Rechazado)
+        const rev = { ...item.revision };
+        if (excludeIntentos && intTot > 0) {
+          let rem = intTot;
+          const takePend = Math.min(rev.pendiente, rem);
+          rev.pendiente -= takePend;
+          rem -= takePend;
+          if (rem > 0) {
+            const takeRech = Math.min(rev.rechazado, rem);
+            rev.rechazado -= takeRech;
+          }
+        }
+
+        lineCountsGlobal[item.linea] = (lineCountsGlobal[item.linea] || 0) + total;
+
+        return {
+          codigo: item.codigo,
+          nombre: item.nombre,
+          linea: item.linea,
+          nuevo,
+          renovacion,
+          total,
+          anulados: item.anulados,
+          intentosAnt: { ...item.intentosAnt },
+          revision: rev
+        };
+      });
+
+      const filteredLists = selectedLine === 'Todas'
+        ? allLists
+        : allLists.filter(l => l.linea === selectedLine);
+
+      const anuladosFiltered = filteredLists.reduce((acc, l) => acc + l.anulados, 0);
+      const intentosFiltered = filteredLists.reduce((acc, l) => acc + l.intentosAnt.nuevo + l.intentosAnt.renovacion, 0);
+      const netoBaseFiltered = filteredLists.reduce((acc, l) => acc + l.total + (excludeIntentos ? (l.intentosAnt.nuevo + l.intentosAnt.renovacion) : 0), 0);
+      const totalCsvFiltered = selectedLine === 'Todas'
+        ? PRELOADED_DATA.totalCsvRows
+        : netoBaseFiltered + anuladosFiltered;
+
+      // Profesionales únicos en modo precargado
+      let uniqueCount = PRELOADED_DATA.unicosTotal;
+      let multilistaCount = PRELOADED_DATA.multilistaTotal;
+      let uniqueIsExact = true;
+
+      if (selectedLine === 'Todas') {
+        uniqueCount = PRELOADED_DATA.unicosTotal;
+        multilistaCount = PRELOADED_DATA.multilistaTotal;
+        uniqueIsExact = !excludeIntentos; // Los 14 intentos previos pertenecen a cédulas que ya radicaron otro intento vigente
+      } else if (filteredLists.length === 1) {
+        // Líneas de lista única (Secretarios o Peritos): 1 postulación vigente por profesional
+        uniqueCount = filteredLists[0].total;
+        multilistaCount = 0;
+        uniqueIsExact = true;
+      } else {
+        // Líneas multilista en modo precargado (sin tabla de cédulas embebida): estimación clara o etiqueta de línea
+        uniqueCount = null;
+        multilistaCount = null;
+        uniqueIsExact = false;
+      }
+
+      return finalizeComputedObject({
+        allLists,
+        filteredLists,
+        lineCountsGlobal,
+        totalCsvGlobal: PRELOADED_DATA.totalCsvRows,
+        anuladosGlobal: PRELOADED_DATA.anuladosTotal,
+        intentosGlobal,
+        totalCsvFiltered,
+        anuladosFiltered,
+        intentosFiltered,
+        uniqueCount,
+        multilistaCount,
+        uniqueIsExact,
+        dailySeries: PRELOADED_DATA.dailySeries,
+        dailyIsFilteredExact: false
+      });
+    }
+
+    function finalizeComputedObject(ctx) {
+      const totalNeto = ctx.filteredLists.reduce((s, l) => s + l.total, 0);
+      const totalNuevo = ctx.filteredLists.reduce((s, l) => s + l.nuevo, 0);
+      const totalRenov = ctx.filteredLists.reduce((s, l) => s + l.renovacion, 0);
+
+      const revTotals = ctx.filteredLists.reduce((acc, l) => {
+        acc.aprobado += l.revision.aprobado;
+        acc.rechazado += l.revision.rechazado;
+        acc.subsanacion += l.revision.subsanacion;
+        acc.pendiente += l.revision.pendiente;
+        return acc;
+      }, { aprobado: 0, rechazado: 0, subsanacion: 0, pendiente: 0 });
+
+      const revisados = revTotals.aprobado + revTotals.rechazado + revTotals.subsanacion;
+      const avancePct = totalNeto > 0 ? (revisados / totalNeto) * 100 : 0;
+
+      // Enriquecer cada lista con % de participación y % de avance
+      const enrichedLists = ctx.filteredLists.map(l => {
+        const revDone = l.revision.aprobado + l.revision.rechazado + l.revision.subsanacion;
+        const pctNuevo = l.total > 0 ? (l.nuevo / l.total) * 100 : 0;
+        const pctRenov = l.total > 0 ? (l.renovacion / l.total) * 100 : 0;
+        const participacion = totalNeto > 0 ? (l.total / totalNeto) * 100 : 0;
+        const avanceRev = l.total > 0 ? (revDone / l.total) * 100 : 0;
+        return {
+          ...l,
+          revDone,
+          pctNuevo,
+          pctRenov,
+          participacion,
+          avanceRev
+        };
+      });
+
+      // Ordenar lista global por total descendente para métricas de insights
+      const globalNeto = ctx.allLists.reduce((s, l) => s + l.total, 0);
+
+      return {
+        ...ctx,
+        lists: enrichedLists,
+        totalNeto,
+        totalNuevo,
+        totalRenov,
+        pctNuevo: totalNeto > 0 ? (totalNuevo / totalNeto) * 100 : 0,
+        pctRenov: totalNeto > 0 ? (totalRenov / totalNeto) * 100 : 0,
+        revTotals,
+        revisados,
+        avancePct,
+        globalNeto
+      };
+    }
+
+    // =========================================================================
+    // 7. RENDERIZADO DE CONTROLES, KPIS E INSIGHTS
+    // =========================================================================
+    function renderHeaderAndControls(data) {
+      const excludedExtra = state.excludeIntentos ? data.intentosGlobal : 0;
+      const totalExcludedGlobal = data.anuladosGlobal + excludedExtra;
+
+      // Subtítulo del encabezado
+      const subtitleEl = document.getElementById('headerSubtitle');
+      if (state.excludeIntentos) {
+        subtitleEl.textContent = `Base depurada ampliada: excluye ${fmtInt(data.anuladosGlobal)} ANULADO POR DUPLICIDAD + ${fmtInt(data.intentosGlobal)} intentos anteriores (${fmtInt(totalExcludedGlobal)} excluidos de ${fmtInt(data.totalCsvGlobal)} totales)`;
+      } else {
+        subtitleEl.textContent = `Base depurada: excluye radicados con estado ANULADO POR DUPLICIDAD (${fmtInt(data.anuladosGlobal)} excluidos de ${fmtInt(data.totalCsvGlobal)} totales)`;
+      }
+
+      // Badge corte
+      const cutoffEl = document.getElementById('headerCutoffBadge');
+      cutoffEl.textContent = state.isCustomCsv
+        ? `Base en vivo · Excluye ANULADO POR DUPLICIDAD${state.excludeIntentos ? ' + Intentos Anteriores' : ''}`
+        : `Corte: 23 Nov 2026 · Excluye ANULADO POR DUPLICIDAD${state.excludeIntentos ? ' + Intentos Anteriores' : ''}`;
+
+      // Badge CSV cargado
+      const customBadge = document.getElementById('customCsvBadge');
+      const resetBtn = document.getElementById('btnResetData');
+      if (state.isCustomCsv) {
+        customBadge.classList.remove('hidden');
+        document.getElementById('customCsvName').textContent = state.customFileName;
+        resetBtn.classList.remove('hidden');
+        resetBtn.classList.add('inline-flex');
+      } else {
+        customBadge.classList.add('hidden');
+        resetBtn.classList.add('hidden');
+        resetBtn.classList.remove('inline-flex');
+      }
+
+      // Contador del switch de gobernanza
+      document.getElementById('toggleIntentosCount').textContent = fmtInt(data.intentosGlobal);
+
+      // Resumen para impresión
+      document.getElementById('printFilterText').textContent =
+        `Línea activa: ${state.selectedLine} · Depuración: ${state.excludeIntentos ? 'Estricta + Intentos Anteriores' : 'Estricta (sin ANULADO POR DUPLICIDAD)'}`;
+
+      // Footer
+      document.getElementById('footerSourceLabel').textContent = state.isCustomCsv
+        ? `Fuente cargada en vivo: ${state.customFileName} (${fmtInt(data.totalCsvGlobal)} radicados · ${fmtInt(data.globalNeto)} válidos netos)`
+        : `Fuente precargada: ${PRELOADED_DATA.sourceName} (${fmtInt(data.totalCsvGlobal)} radicados · ${fmtInt(data.globalNeto)} válidos netos)`;
+
+      // Pills de Línea de Servicio
+      const availableLines = [...LINE_ORDER.filter(l => data.lineCountsGlobal[l] > 0)];
+      Object.keys(data.lineCountsGlobal).forEach(l => {
+        if (!availableLines.includes(l) && data.lineCountsGlobal[l] > 0) availableLines.push(l);
+      });
+
+      const pillsContainer = document.getElementById('lineFilterPills');
+      const allLinesCount = data.allLists.length;
+      const pillsHTML = [
+        { key: 'Todas', label: `Todas (${allLinesCount} listas)`, count: data.globalNeto },
+        ...availableLines.map(line => ({
+          key: line,
+          label: line,
+          count: data.lineCountsGlobal[line] || 0
+        }))
+      ].map(p => {
+        const active = state.selectedLine === p.key;
+        return `
+          <button
+            type="button"
+            data-line="${p.key}"
+            class="line-pill-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+              active
+                ? 'bg-navy-900 text-white border-navy-900 shadow-sm'
+                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-navy-900'
+            }"
+          >
+            <span>${p.label}</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] tabular-nums ${
+              active ? 'bg-white/20 text-white' : 'bg-white text-slate-500 border border-slate-200/80'
+            }">${fmtInt(p.count)}</span>
+          </button>
+        `;
+      }).join('');
+
+      pillsContainer.innerHTML = pillsHTML;
+      pillsContainer.querySelectorAll('.line-pill-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedLine = btn.dataset.line;
+          renderAll();
+        });
+      });
+    }
+
+    function renderKPIs(data) {
+      // KPI 1: Neto
+      document.getElementById('kpiNeto').textContent = fmtInt(data.totalNeto);
+      const exclCount = data.anuladosFiltered + (state.excludeIntentos ? data.intentosFiltered : 0);
+      const exclPct = data.totalCsvFiltered > 0 ? (exclCount / data.totalCsvFiltered) * 100 : 0;
+      const exclLabel = state.excludeIntentos && data.intentosFiltered > 0
+        ? `-${fmtInt(exclCount)} excl. (${fmtInt(data.anuladosFiltered)} anul. + ${fmtInt(data.intentosFiltered)} int.)`
+        : `-${fmtInt(data.anuladosFiltered)} anulados (-${fmtPct(exclPct)})`;
+
+      document.getElementById('kpiNetoSub').innerHTML =
+        `De <strong class="text-slate-700">${fmtInt(data.totalCsvFiltered)}</strong> radicados · <span class="text-rose-600 font-semibold">${exclLabel}</span>`;
+
+      // KPI 2: Nuevos
+      document.getElementById('kpiNuevos').textContent = fmtInt(data.totalNuevo);
+      document.getElementById('kpiNuevosPct').textContent = fmtPct(data.pctNuevo);
+      document.getElementById('kpiNuevosBar').style.width = `${Math.min(100, data.pctNuevo).toFixed(1)}%`;
+
+      // KPI 3: Renovación
+      document.getElementById('kpiRenovacion').textContent = fmtInt(data.totalRenov);
+      document.getElementById('kpiRenovacionPct').textContent = fmtPct(data.pctRenov);
+      document.getElementById('kpiRenovacionBar').style.width = `${Math.min(100, data.pctRenov).toFixed(1)}%`;
+
+      // KPI 4: Profesionales Únicos
+      const kpiUnicos = document.getElementById('kpiUnicos');
+      const kpiUnicosBadge = document.getElementById('kpiUnicosBadge');
+      const kpiUnicosSub = document.getElementById('kpiUnicosSub');
+
+      if (data.uniqueCount !== null) {
+        const ratio = data.uniqueCount > 0 ? (data.totalNeto / data.uniqueCount) : 0;
+        kpiUnicos.textContent = fmtInt(data.uniqueCount);
+        kpiUnicosBadge.textContent = `${fmtDec(ratio)} / pers.`;
+        kpiUnicosSub.innerHTML =
+          `Promedio <strong class="text-slate-700">${fmtDec(ratio)}</strong> listas/persona · <strong class="text-slate-700">${fmtInt(data.multilistaCount)}</strong> multilista`;
+      } else {
+        kpiUnicos.textContent = fmtInt(data.totalNeto);
+        kpiUnicosBadge.textContent = `${data.lists.length} listas`;
+        kpiUnicosSub.innerHTML =
+          `Postulaciones en <strong class="text-slate-700">${state.selectedLine}</strong> · <span class="text-slate-400">Sube CSV para cédulas únicas por línea</span>`;
+      }
+
+      // KPI 5: Avance Revisión Humana
+      document.getElementById('kpiAvancePct').textContent = fmtPct(data.avancePct);
+      document.getElementById('kpiAvanceCount').textContent = `${fmtInt(data.revisados)} rev.`;
+
+      const pAprob = data.totalNeto > 0 ? (data.revTotals.aprobado / data.totalNeto) * 100 : 0;
+      const pSubs = data.totalNeto > 0 ? (data.revTotals.subsanacion / data.totalNeto) * 100 : 0;
+      const pRech = data.totalNeto > 0 ? (data.revTotals.rechazado / data.totalNeto) * 100 : 0;
+
+      document.getElementById('revBarAprob').style.width = `${pAprob.toFixed(1)}%`;
+      document.getElementById('revBarSubs').style.width = `${pSubs.toFixed(1)}%`;
+      document.getElementById('revBarRech').style.width = `${pRech.toFixed(1)}%`;
+
+      document.getElementById('kpiAvanceSub').innerHTML =
+        `<span class="text-emerald-700 font-semibold">${fmtInt(data.revTotals.aprobado)} aprob.</span> · ` +
+        `<span class="text-rose-600 font-semibold">${fmtInt(data.revTotals.rechazado)} rech.</span> · ` +
+        `<span class="text-amber-700 font-semibold">${fmtInt(data.revTotals.subsanacion)} subs.</span> · ` +
+        `${fmtInt(data.revTotals.pendiente)} pend.`;
+    }
+
+    function renderInsights(data) {
+      // Calcular insights sobre todas las listas activas (global para visión directiva)
+      const sortedGlobal = [...data.allLists].sort((a, b) => b.total - a.total);
+      const top3 = sortedGlobal.slice(0, 3);
+      const top3Sum = top3.reduce((s, x) => s + x.total, 0);
+      const top3Pct = data.globalNeto > 0 ? (top3Sum / data.globalNeto) * 100 : 0;
+
+      const arbEjec = data.allLists.find(l => l.codigo === 'arb-ejecutivo');
+      const arbA = data.allLists.find(l => l.codigo === 'arb-a');
+      const concApoyo = data.allLists.find(l => l.codigo === 'conc-apoyo');
+
+      const pctArbEjecNuevo = arbEjec && arbEjec.total > 0 ? (arbEjec.nuevo / arbEjec.total) * 100 : 0;
+      const pctArbARenov = arbA && arbA.total > 0 ? (arbA.renovacion / arbA.total) * 100 : 0;
+      const pctApoyoRenov = concApoyo && concApoyo.total > 0 ? (concApoyo.renovacion / concApoyo.total) * 100 : 0;
+
+      // Avance auditoría por línea
+      const calcLineAudit = (lineName) => {
+        const items = data.allLists.filter(l => l.linea === lineName);
+        const tot = items.reduce((s, x) => s + x.total, 0);
+        const done = items.reduce((s, x) => s + x.revision.aprobado + x.revision.rechazado + x.revision.subsanacion, 0);
+        return { tot, done, pend: tot - done, pct: tot > 0 ? (done / tot) * 100 : 0 };
+      };
+      const concAudit = calcLineAudit('Conciliación');
+      const arbAudit = calcLineAudit('Arbitraje');
+
+      const simulatedNeto = state.excludeIntentos
+        ? data.globalNeto
+        : data.globalNeto - data.intentosGlobal;
+
+      const insights = [
+        {
+          accent: 'border-l-navy-900 bg-slate-50/80',
+          iconBg: 'bg-navy-900/10 text-navy-900',
+          icon: 'layers',
+          title: `Concentración Top 3: ${fmtPct(top3Pct)} del volumen`,
+          body: `${top3.map(x => `<strong>${x.nombre}</strong> (${fmtInt(x.total)})`).join(', ')} agrupan <strong>${fmtInt(top3Sum)}</strong> de las ${fmtInt(data.globalNeto)} postulaciones válidas.`
+        },
+        {
+          accent: 'border-l-teal-600 bg-teal-50/40',
+          iconBg: 'bg-teal-100 text-teal-700',
+          icon: 'git-compare',
+          title: 'Expansión de talento vs. consolidación',
+          body: `<strong>Árbitros Ejecutivos</strong> lidera la atracción nueva (<strong>${fmtPct(pctArbEjecNuevo)}</strong> nuevos), mientras <strong>Árbitros Lista A (${fmtPct(pctArbARenov)})</strong> y <strong>Conciliadores de Apoyo (${fmtPct(pctApoyoRenov)})</strong> destacan en retención por renovación.`
+        },
+        {
+          accent: 'border-l-blue-700 bg-blue-50/40',
+          iconBg: 'bg-blue-100 text-blue-800',
+          icon: 'check-square',
+          title: `Auditoría humana: Conciliación al ${fmtPct(concAudit.pct)}`,
+          body: `Conciliación registra <strong>${fmtInt(concAudit.done)}/${fmtInt(concAudit.tot)}</strong> revisados, en contraste con Arbitraje donde <strong>${fmtInt(arbAudit.pend)}</strong> de ${fmtInt(arbAudit.tot)} (${fmtPct(100 - arbAudit.pct)}) siguen pendientes de validación.`
+        },
+        {
+          accent: 'border-l-amber-500 bg-amber-50/60',
+          iconBg: 'bg-amber-100 text-amber-700',
+          icon: 'alert-triangle',
+          title: `Gobernanza: ${fmtInt(data.intentosGlobal)} intentos previos sin anular`,
+          body: state.excludeIntentos
+            ? `Filtro de simulación <strong>activo</strong>: se excluyeron ${fmtInt(data.intentosGlobal)} registros con alerta <em>INTENTO ANTERIOR</em>, dejando <strong>${fmtInt(data.globalNeto)}</strong> postulaciones depuradas.`
+            : `Existen <strong>${fmtInt(data.intentosGlobal)}</strong> registros marcados como <em>INTENTO ANTERIOR</em> aún en Pendiente/Rechazado. Al excluirlos el neto ajustado sería <strong>${fmtInt(simulatedNeto)}</strong>.`
+        }
+      ];
+
+      const container = document.getElementById('insightsContainer');
+      container.innerHTML = insights.map(ins => `
+        <div class="rounded-xl border border-slate-200/80 border-l-4 ${ins.accent} p-3.5 transition hover:shadow-sm">
+          <div class="flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg ${ins.iconBg} flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="${ins.icon}" class="w-4 h-4"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-xs font-bold text-slate-900 leading-snug">${ins.title}</h3>
+              <p class="text-[11.5px] text-slate-600 mt-1 leading-relaxed tabular-nums">${ins.body}</p>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 8. GRÁFICOS CON CHART.JS (SIN SUPERPOSICIONES Y CON TOOLTIPS ENRIQUECIDOS)
+    // =========================================================================
+
+    // Plugin personalizado para pintar el Total Neto a la derecha de cada barra apilada
+    const stackedTotalPlugin = {
+      id: 'stackedTotalLabels',
+      afterDatasetsDraw(chart) {
+        if (chart.config._customMode !== 'stacked') return;
+        const { ctx, data } = chart;
+        const totals = chart.config._rowTotals || [];
+        const lastMetaIndex = data.datasets.length - 1;
+        const meta = chart.getDatasetMeta(lastMetaIndex);
+        if (!meta || !meta.data) return;
+
+        ctx.save();
+        ctx.font = '700 12px "Plus Jakarta Sans", Inter, sans-serif';
+        ctx.fillStyle = '#0F2744';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
+        meta.data.forEach((barElement, index) => {
+          const totalVal = totals[index];
+          if (totalVal === undefined) return;
+          // Buscar la coordenada X más a la derecha entre todos los datasets para este índice
+          let maxX = barElement.x;
+          for (let d = 0; d < data.datasets.length; d++) {
+            const m = chart.getDatasetMeta(d);
+            if (m && m.data[index] && m.data[index].x > maxX) {
+              maxX = m.data[index].x;
+            }
+          }
+          ctx.fillText(fmtInt(totalVal), maxX + 8, barElement.y);
+        });
+        ctx.restore();
+      }
+    };
+
+    function renderMainChart(data) {
+      const sorted = [...data.lists].sort((a, b) => b.total - a.total);
+      const mode = state.chartMode;
+
+      // Ajustar altura dinámica del contenedor para legibilidad óptima
+      const wrapper = document.getElementById('mainChartWrapper');
+      const minHeight = mode === 'grouped'
+        ? Math.max(360, sorted.length * 52 + 50)
+        : Math.max(360, sorted.length * 42 + 45);
+      wrapper.style.height = `${minHeight}px`;
+
+      // Subtítulo y pista
+      document.getElementById('mainChartSubtitle').textContent =
+        `Ordenado de mayor a menor volumen neto · ${sorted.length} ${sorted.length === 1 ? 'lista activa' : 'listas activas'} (${state.selectedLine})`;
+
+      const hints = {
+        stacked: 'Valores internos visibles y total neto al extremo derecho',
+        grouped: 'Comparación directa lado a lado entre Nuevos y Renovación',
+        percent: 'Proporción 100% para evaluar atracción de talento nuevo vs. retención'
+      };
+      document.getElementById('mainChartModeHint').textContent = hints[mode];
+
+      const labels = sorted.map(l => l.nombre);
+      const nuevoData = mode === 'percent'
+        ? sorted.map(l => Number(l.pctNuevo.toFixed(1)))
+        : sorted.map(l => l.nuevo);
+      const renovData = mode === 'percent'
+        ? sorted.map(l => Number(l.pctRenov.toFixed(1)))
+        : sorted.map(l => l.renovacion);
+      const rowTotals = sorted.map(l => l.total);
+      const maxVal = Math.max(...rowTotals, 10);
+
+      if (state.charts.main) {
+        state.charts.main.destroy();
+      }
+
+      const ctx = document.getElementById('mainListChart').getContext('2d');
+      const isStacked = mode === 'stacked' || mode === 'percent';
+
+      const config = {
+        type: 'bar',
+        _customMode: mode,
+        _rowTotals: rowTotals,
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Nuevos Postulantes',
+              data: nuevoData,
+              backgroundColor: COLORS.nuevo,
+              hoverBackgroundColor: COLORS.nuevoHover,
+              borderRadius: mode === 'grouped' ? 5 : { topLeft: 4, bottomLeft: 4, topRight: 0, bottomRight: 0 },
+              borderSkipped: false,
+              barPercentage: mode === 'grouped' ? 0.85 : 0.72,
+              categoryPercentage: mode === 'grouped' ? 0.8 : 0.82
+            },
+            {
+              label: 'Renovación',
+              data: renovData,
+              backgroundColor: COLORS.renovacion,
+              hoverBackgroundColor: COLORS.renovacionHover,
+              borderRadius: mode === 'grouped' ? 5 : { topRight: 5, bottomRight: 5, topLeft: 0, bottomLeft: 0 },
+              borderSkipped: false,
+              barPercentage: mode === 'grouped' ? 0.85 : 0.72,
+              categoryPercentage: mode === 'grouped' ? 0.8 : 0.82
+            }
+          ]
+        },
+        plugins: [stackedTotalPlugin],
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 420 },
+          layout: {
+            padding: {
+              right: mode === 'percent' ? 16 : 46,
+              top: 4,
+              bottom: 4
+            }
+          },
+          scales: {
+            x: {
+              stacked: isStacked,
+              beginAtZero: true,
+              max: mode === 'percent' ? 100 : undefined,
+              suggestedMax: mode === 'stacked' ? Math.ceil(maxVal * 1.1) : undefined,
+              grid: {
+                color: '#F1F5F9',
+                drawBorder: false
+              },
+              ticks: {
+                color: '#64748B',
+                font: { size: 11, family: 'Inter' },
+                callback: (val) => mode === 'percent' ? `${val}%` : fmtInt(val)
+              }
+            },
+            y: {
+              stacked: isStacked,
+              grid: { display: false },
+              ticks: {
+                color: '#1E293B',
+                font: { size: 12, weight: '600', family: 'Inter' },
+                padding: 6
+              }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0F2744',
+              titleColor: '#F8FAFC',
+              bodyColor: '#E2E8F0',
+              borderColor: 'rgba(255,255,255,0.12)',
+              borderWidth: 1,
+              padding: 12,
+              cornerRadius: 10,
+              displayColors: true,
+              callbacks: {
+                title: (items) => {
+                  const idx = items[0].dataIndex;
+                  const row = sorted[idx];
+                  return `${row.nombre} (${row.codigo})`;
+                },
+                label: (context) => {
+                  const row = sorted[context.dataIndex];
+                  const isNuevo = context.datasetIndex === 0;
+                  const count = isNuevo ? row.nuevo : row.renovacion;
+                  const pct = isNuevo ? row.pctNuevo : row.pctRenov;
+                  return ` ${context.dataset.label}: ${fmtInt(count)} (${fmtPct(pct)})`;
+                },
+                afterBody: (items) => {
+                  const row = sorted[items[0].dataIndex];
+                  const lines = [
+                    `────────────────────`,
+                    `Total neto: ${fmtInt(row.total)} (${fmtPct(row.participacion)} del filtro)`
+                  ];
+                  if (row.anulados > 0) {
+                    lines.push(`Anulados por duplicidad excluidos: ${fmtInt(row.anulados)}`);
+                  }
+                  lines.push(`Avance revisión humana: ${fmtPct(row.avanceRev)} (${fmtInt(row.revDone)}/${fmtInt(row.total)})`);
+                  return lines;
+                }
+              }
+            },
+            datalabels: {
+              color: (ctx) => mode === 'grouped' ? '#334155' : '#FFFFFF',
+              anchor: mode === 'grouped' ? 'end' : 'center',
+              align: mode === 'grouped' ? 'right' : 'center',
+              offset: mode === 'grouped' ? 4 : 0,
+              font: {
+                family: 'Inter',
+                weight: '700',
+                size: 11
+              },
+              formatter: (value) => {
+                if (value <= 0) return '';
+                if (mode === 'percent') {
+                  return value >= 11 ? `${value.toLocaleString('es-CO', { maximumFractionDigits: 1 })}%` : '';
+                }
+                if (mode === 'stacked') {
+                  // Mostrar etiqueta interna solo si el segmento tiene suficiente ancho visual para no solaparse
+                  const threshold = Math.max(10, maxVal * 0.055);
+                  return value >= threshold ? fmtInt(value) : '';
+                }
+                return fmtInt(value);
+              }
+            }
+          }
+        }
+      };
+
+      state.charts.main = new Chart(ctx, config);
+    }
+
+    function renderServiceLineDonut(data) {
+      // Construir distribución global por línea (permite clic directo para filtrar)
+      const entries = Object.entries(data.lineCountsGlobal)
+        .filter(([, val]) => val > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      const labels = entries.map(([k]) => k);
+      const values = entries.map(([, v]) => v);
+      const colors = labels.map(l => COLORS.lines[l] || COLORS.lines.Otras);
+
+      // Valor central dinámico según filtro activo
+      document.getElementById('donutCenterValue').textContent = fmtInt(data.totalNeto);
+      document.getElementById('donutCenterLabel').textContent =
+        state.selectedLine === 'Todas' ? 'Válidas' : state.selectedLine.split(' ')[0];
+
+      if (state.charts.donut) {
+        state.charts.donut.destroy();
+      }
+
+      const ctx = document.getElementById('serviceLineDonut').getContext('2d');
+      state.charts.donut = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderColor: '#FFFFFF',
+            borderWidth: 2.5,
+            hoverOffset: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '66%',
+          onClick: (_, elements) => {
+            if (elements.length > 0) {
+              const clickedLine = labels[elements[0].index];
+              state.selectedLine = state.selectedLine === clickedLine ? 'Todas' : clickedLine;
+              renderAll();
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0F2744',
+              padding: 10,
+              cornerRadius: 10,
+              callbacks: {
+                label: (ctx) => {
+                  const val = ctx.parsed;
+                  const pct = data.globalNeto > 0 ? (val / data.globalNeto) * 100 : 0;
+                  return ` ${ctx.label}: ${fmtInt(val)} (${fmtPct(pct)})`;
+                }
+              }
+            },
+            datalabels: {
+              color: '#FFFFFF',
+              font: { weight: '700', size: 11, family: 'Inter' },
+              formatter: (val) => {
+                const pct = data.globalNeto > 0 ? (val / data.globalNeto) * 100 : 0;
+                return pct >= 8 ? fmtPct(pct) : '';
+              }
+            }
+          }
+        }
+      });
+
+      // Leyenda ejecutiva interactiva debajo de la dona
+      const legendEl = document.getElementById('donutLegendList');
+      legendEl.innerHTML = entries.map(([line, val]) => {
+        const pct = data.globalNeto > 0 ? (val / data.globalNeto) * 100 : 0;
+        const isSelected = state.selectedLine === line;
+        const color = COLORS.lines[line] || COLORS.lines.Otras;
+        return `
+          <button
+            type="button"
+            data-donut-line="${line}"
+            class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition cursor-pointer ${
+              isSelected
+                ? 'bg-navy-900/5 ring-1 ring-navy-900/20'
+                : 'hover:bg-slate-50'
+            }"
+          >
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-3 h-3 rounded-full shrink-0" style="background-color:${color}"></span>
+              <span class="text-xs font-semibold text-slate-700 truncate">${line}</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 tabular-nums">
+              <span class="text-xs font-bold text-navy-900">${fmtInt(val)}</span>
+              <span class="text-[11px] font-medium text-slate-500 w-12 text-right">${fmtPct(pct)}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      legendEl.querySelectorAll('[data-donut-line]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const line = btn.dataset.donutLine;
+          state.selectedLine = state.selectedLine === line ? 'Todas' : line;
+          renderAll();
+        });
+      });
+    }
+
+    function renderDailyChart(data) {
+      const series = data.dailySeries || [];
+      const noticeEl = document.getElementById('dailyFilterNotice');
+
+      if (!data.dailyIsFilteredExact && (state.selectedLine !== 'Todas' || state.excludeIntentos)) {
+        noticeEl.classList.remove('hidden');
+      } else {
+        noticeEl.classList.add('hidden');
+      }
+
+      // Calcular estadísticas de pico dinámicamente
+      let maxDay = { fecha: '', total: 0 };
+      let peakWindowSum = 0;
+      let totalSeriesSum = 0;
+
+      series.forEach(d => {
+        const t = d.nuevo + d.renovacion;
+        totalSeriesSum += t;
+        if (t > maxDay.total) maxDay = { fecha: d.fecha, total: t };
+        if (d.fecha >= '2026-10-28' && d.fecha <= '2026-10-30') peakWindowSum += t;
+      });
+
+      const peakBadge = document.getElementById('peakCalloutBadge');
+      if (peakWindowSum > 0 && totalSeriesSum > 0) {
+        const peakPct = (peakWindowSum / totalSeriesSum) * 100;
+        peakBadge.innerHTML = `
+          <i data-lucide="trending-up" class="w-4 h-4 text-amber-600 shrink-0"></i>
+          <div class="leading-tight tabular-nums">
+            <span class="font-bold">Pico cierre 28–30 Oct:</span> ${fmtInt(peakWindowSum)} (<span class="font-semibold">${fmtPct(peakPct)}</span>)
+            <span class="block text-[11px] text-amber-700">Máximo el ${formatShortDate(maxDay.fecha)} con ${fmtInt(maxDay.total)} postulaciones</span>
+          </div>
+        `;
+      } else if (maxDay.total > 0) {
+        peakBadge.innerHTML = `
+          <i data-lucide="trending-up" class="w-4 h-4 text-amber-600 shrink-0"></i>
+          <div class="leading-tight tabular-nums">
+            <span class="font-bold">Día pico:</span> ${formatShortDate(maxDay.fecha)} (${fmtInt(maxDay.total)})
+            <span class="block text-[11px] text-amber-700">Total serie con fecha: ${fmtInt(totalSeriesSum)}</span>
+          </div>
+        `;
+      }
+
+      const labels = series.map(d => formatShortDate(d.fecha));
+      const nuevos = series.map(d => d.nuevo);
+      const renovs = series.map(d => d.renovacion);
+
+      // Resaltar sutilmente los días de cierre (28-30 Oct) con borde ámbar
+      const isPeakDay = (iso) => iso >= '2026-10-28' && iso <= '2026-10-30';
+
+      if (state.charts.daily) {
+        state.charts.daily.destroy();
+      }
+
+      const ctx = document.getElementById('dailyChart').getContext('2d');
+      state.charts.daily = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Nuevos Postulantes',
+              data: nuevos,
+              backgroundColor: series.map(d => isPeakDay(d.fecha) ? '#0F766E' : 'rgba(13, 148, 136, 0.85)'),
+              borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 2, bottomRight: 2 },
+              maxBarThickness: 20
+            },
+            {
+              label: 'Renovación',
+              data: renovs,
+              backgroundColor: series.map(d => isPeakDay(d.fecha) ? '#1E3A8A' : 'rgba(30, 64, 175, 0.85)'),
+              borderRadius: { topLeft: 3, topRight: 3, bottomLeft: 0, bottomRight: 0 },
+              maxBarThickness: 20
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false },
+              ticks: {
+                color: '#64748B',
+                font: { size: 10.5, family: 'Inter' },
+                maxRotation: 45,
+                minRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 12
+              }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              grid: {
+                color: '#F1F5F9',
+                drawBorder: false
+              },
+              ticks: {
+                color: '#64748B',
+                font: { size: 11, family: 'Inter' }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: {
+                boxWidth: 10,
+                boxHeight: 10,
+                usePointStyle: true,
+                pointStyle: 'rectRounded',
+                color: '#475569',
+                font: { size: 11, weight: '600', family: 'Inter' }
+              }
+            },
+            datalabels: {
+              display: (ctx) => {
+                // Mostrar solo la etiqueta total sobre el pico máximo para evitar saturación visual
+                if (ctx.datasetIndex !== 1) return false;
+                const d = series[ctx.dataIndex];
+                if (!d) return false;
+                const tot = d.nuevo + d.renovacion;
+                return tot >= maxDay.total && tot >= 40;
+              },
+              anchor: 'end',
+              align: 'top',
+              offset: 2,
+              color: '#B45309',
+              font: { weight: '800', size: 11, family: '"Plus Jakarta Sans", Inter' },
+              formatter: (_, ctx) => {
+                const d = series[ctx.dataIndex];
+                return fmtInt(d.nuevo + d.renovacion);
+              }
+            },
+            tooltip: {
+              backgroundColor: '#0F2744',
+              padding: 11,
+              cornerRadius: 10,
+              callbacks: {
+                title: (items) => {
+                  const d = series[items[0].dataIndex];
+                  return `Fecha: ${d.fecha} (${formatShortDate(d.fecha)})`;
+                },
+                afterBody: (items) => {
+                  const idx = items[0].dataIndex;
+                  const d = series[idx];
+                  const totDia = d.nuevo + d.renovacion;
+                  let acum = 0;
+                  for (let i = 0; i <= idx; i++) acum += series[i].nuevo + series[i].renovacion;
+                  const pctAcum = totalSeriesSum > 0 ? (acum / totalSeriesSum) * 100 : 0;
+                  return [
+                    `──────────────────`,
+                    `Total día: ${fmtInt(totDia)}`,
+                    `Acumulado: ${fmtInt(acum)} (${fmtPct(pctAcum)})`
+                  ];
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // 9. TABLA GERENCIAL ORDENABLE E INTERACTIVA
+    // =========================================================================
+    function renderTable(data) {
+      const query = normalizeText(state.tableQuery);
+      let rows = data.lists.filter(l => {
+        if (!query) return true;
+        return (
+          normalizeText(l.nombre).includes(query) ||
+          normalizeText(l.codigo).includes(query) ||
+          normalizeText(l.linea).includes(query)
+        );
+      });
+
+      // Ordenar
+      const { sortKey, sortDir } = state;
+      const mult = sortDir === 'asc' ? 1 : -1;
+      rows.sort((a, b) => {
+        const va = a[sortKey];
+        const vb = b[sortKey];
+        if (typeof va === 'string') return va.localeCompare(vb, 'es') * mult;
+        return ((va || 0) - (vb || 0)) * mult;
+      });
+
+      // Actualizar íconos de ordenamiento en encabezados
+      document.querySelectorAll('.sortable-th').forEach(th => {
+        const icon = th.querySelector('.sort-icon');
+        if (th.dataset.sort === sortKey) {
+          icon.textContent = sortDir === 'asc' ? '↑' : '↓';
+          icon.className = 'sort-icon text-navy-900 font-bold';
+        } else {
+          icon.textContent = '↕';
+          icon.className = 'sort-icon text-slate-300';
+        }
+      });
+
+      const tbody = document.getElementById('executiveTableBody');
+      if (rows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="py-10 text-center text-sm text-slate-400">
+              No hay listas que coincidan con el filtro actual.
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = rows.map(row => {
+          const lineBadgeClass = COLORS.lineBadge[row.linea] || COLORS.lineBadge.Otras;
+          const revTooltip = `Aprobados: ${row.revision.aprobado} | Rechazados: ${row.revision.rechazado} | Subsanación: ${row.revision.subsanacion} | Pendientes: ${row.revision.pendiente}`;
+          const intentsCount = row.intentosAnt.nuevo + row.intentosAnt.renovacion;
+
+          return `
+            <tr class="hover:bg-slate-50/90 transition-colors">
+              <td class="py-3.5 pl-5 pr-3">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                  <span class="font-semibold text-slate-800">${row.nombre}</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10.5px] font-mono font-medium bg-slate-100 text-slate-500 border border-slate-200/80 w-fit">
+                    ${row.codigo}
+                  </span>
+                  ${intentsCount > 0 ? `
+                    <span title="${intentsCount} intento(s) anterior(es) sin anular" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 w-fit">
+                      ${intentsCount} int. ant.
+                    </span>
+                  ` : ''}
+                </div>
+              </td>
+              <td class="py-3.5 px-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${lineBadgeClass}">
+                  ${row.linea}
+                </span>
+              </td>
+              <td class="py-3.5 px-3 text-right font-semibold text-teal-700 tabular-nums">${fmtInt(row.nuevo)}</td>
+              <td class="py-3.5 px-3 text-right font-semibold text-blue-800 tabular-nums">${fmtInt(row.renovacion)}</td>
+              <td class="py-3.5 px-3 text-right font-extrabold text-navy-900 tabular-nums">${fmtInt(row.total)}</td>
+              <td class="py-3.5 px-3 text-right text-slate-600 font-medium tabular-nums">${fmtPct(row.participacion)}</td>
+              <td class="py-3.5 px-4">
+                <div class="flex items-center justify-between text-[10.5px] font-semibold mb-1 tabular-nums">
+                  <span class="text-teal-700">${fmtPct(row.pctNuevo, 0)} N</span>
+                  <span class="text-blue-800">${fmtPct(row.pctRenov, 0)} R</span>
+                </div>
+                <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden flex">
+                  <div class="h-full bg-teal-600" style="width:${row.pctNuevo.toFixed(1)}%"></div>
+                  <div class="h-full bg-blue-800" style="width:${row.pctRenov.toFixed(1)}%"></div>
+                </div>
+              </td>
+              <td class="py-3.5 px-3 text-right tabular-nums">
+                ${row.anulados > 0
+                  ? `<span class="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">${fmtInt(row.anulados)}</span>`
+                  : `<span class="text-slate-300 font-medium">0</span>`
+                }
+              </td>
+              <td class="py-3.5 pl-3 pr-5 text-right" title="${revTooltip}">
+                <div class="flex items-center justify-end gap-2">
+                  <div class="w-16 h-2 rounded-full bg-slate-100 overflow-hidden shrink-0">
+                    <div class="h-full rounded-full ${row.avanceRev >= 80 ? 'bg-emerald-500' : row.avanceRev >= 20 ? 'bg-amber-500' : 'bg-slate-400'}" style="width:${Math.min(100, row.avanceRev).toFixed(1)}%"></div>
+                  </div>
+                  <span class="text-xs font-bold tabular-nums w-12 text-right ${row.avanceRev >= 80 ? 'text-emerald-700' : 'text-slate-700'}">
+                    ${fmtPct(row.avanceRev)}
+                  </span>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Fila fija de TOTAL GENERAL sobre filas visibles
+      const sumN = rows.reduce((s, r) => s + r.nuevo, 0);
+      const sumR = rows.reduce((s, r) => s + r.renovacion, 0);
+      const sumT = rows.reduce((s, r) => s + r.total, 0);
+      const sumA = rows.reduce((s, r) => s + r.anulados, 0);
+      const sumRev = rows.reduce((s, r) => s + r.revDone, 0);
+      const sumPctN = sumT > 0 ? (sumN / sumT) * 100 : 0;
+      const sumPctR = sumT > 0 ? (sumR / sumT) * 100 : 0;
+      const sumPart = data.totalNeto > 0 ? (sumT / data.totalNeto) * 100 : 0;
+      const sumAvance = sumT > 0 ? (sumRev / sumT) * 100 : 0;
+
+      document.getElementById('executiveTableFoot').innerHTML = `
+        <tr>
+          <td class="py-3.5 pl-5 pr-3 font-display tracking-wide uppercase text-xs">
+            TOTAL GENERAL (${rows.length} ${rows.length === 1 ? 'lista' : 'listas'})
+          </td>
+          <td class="py-3.5 px-3 text-xs text-slate-300 font-normal">${state.selectedLine}</td>
+          <td class="py-3.5 px-3 text-right tabular-nums text-teal-300">${fmtInt(sumN)}</td>
+          <td class="py-3.5 px-3 text-right tabular-nums text-blue-200">${fmtInt(sumR)}</td>
+          <td class="py-3.5 px-3 text-right tabular-nums text-base font-extrabold text-white">${fmtInt(sumT)}</td>
+          <td class="py-3.5 px-3 text-right tabular-nums text-slate-200">${fmtPct(sumPart)}</td>
+          <td class="py-3.5 px-4">
+            <div class="flex items-center justify-between text-[10.5px] font-semibold mb-1 tabular-nums">
+              <span class="text-teal-300">${fmtPct(sumPctN)} N</span>
+              <span class="text-blue-200">${fmtPct(sumPctR)} R</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-white/15 overflow-hidden flex">
+              <div class="h-full bg-teal-400" style="width:${sumPctN.toFixed(1)}%"></div>
+              <div class="h-full bg-blue-400" style="width:${sumPctR.toFixed(1)}%"></div>
+            </div>
+          </td>
+          <td class="py-3.5 px-3 text-right tabular-nums text-rose-300">${fmtInt(sumA)}</td>
+          <td class="py-3.5 pl-3 pr-5 text-right tabular-nums text-amber-300">${fmtPct(sumAvance)}</td>
+        </tr>
+      `;
+    }
+
+    // =========================================================================
+    // 10. EXPORTACIÓN CSV (SEPARADOR ';' + UTF-8 BOM PARA EXCEL)
+    // =========================================================================
+    function downloadSummaryCsv() {
+      const data = computeDashboardData();
+      const sorted = [...data.lists].sort((a, b) => b.total - a.total);
+
+      const headers = [
+        'Codigo_Lista',
+        'Lista',
+        'Linea_Servicio',
+        'Nuevos',
+        'Renovacion',
+        'Total_Neto',
+        'Pct_Participacion',
+        'Pct_Nuevo',
+        'Pct_Renovacion',
+        'Anulados_Duplicidad_Excluidos',
+        'Revisados',
+        'Aprobados',
+        'Rechazados',
+        'Subsanacion',
+        'Pendientes',
+        'Avance_Revision_Pct'
+      ];
+
+      const escapeCell = (val) => {
+        const s = String(val ?? '');
+        return s.includes(';') || s.includes('"') || s.includes('\n')
+          ? `"${s.replace(/"/g, '""')}"`
+          : s;
+      };
+
+      const lines = [headers.join(';')];
+      sorted.forEach(r => {
+        lines.push([
+          r.codigo,
+          r.nombre,
+          r.linea,
+          r.nuevo,
+          r.renovacion,
+          r.total,
+          r.participacion.toFixed(1).replace('.', ','),
+          r.pctNuevo.toFixed(1).replace('.', ','),
+          r.pctRenov.toFixed(1).replace('.', ','),
+          r.anulados,
+          r.revDone,
+          r.revision.aprobado,
+          r.revision.rechazado,
+          r.revision.subsanacion,
+          r.revision.pendiente,
+          r.avanceRev.toFixed(1).replace('.', ',')
+        ].map(escapeCell).join(';'));
+      });
+
+      // Fila total
+      lines.push([
+        'TOTAL',
+        `TOTAL GENERAL (${state.selectedLine})`,
+        state.selectedLine,
+        data.totalNuevo,
+        data.totalRenov,
+        data.totalNeto,
+        '100,0',
+        data.pctNuevo.toFixed(1).replace('.', ','),
+        data.pctRenov.toFixed(1).replace('.', ','),
+        data.anuladosFiltered,
+        data.revisados,
+        data.revTotals.aprobado,
+        data.revTotals.rechazado,
+        data.revTotals.subsanacion,
+        data.revTotals.pendiente,
+        data.avancePct.toFixed(1).replace('.', ',')
+      ].map(escapeCell).join(';'));
+
+      const bom = '\uFEFF';
+      const blob = new Blob([bom + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `Resumen_Gerencial_Listas_MASC_${stamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Resumen gerencial descargado en formato CSV listo para Excel.', 'success');
+    }
+
+    // =========================================================================
+    // 11. ORQUESTADOR DE RENDER Y EVENTOS
+    // =========================================================================
+    function renderAll() {
+      const data = computeDashboardData();
+      renderHeaderAndControls(data);
+      renderKPIs(data);
+      renderMainChart(data);
+      renderServiceLineDonut(data);
+      renderDailyChart(data);
+      renderInsights(data);
+      renderTable(data);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function bindEvents() {
+      // Botón Cargar CSV
+      const fileInput = document.getElementById('csvFileInput');
+      document.getElementById('btnUploadCsv').addEventListener('click', () => {
+        fileInput.value = '';
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const parsedRows = parseCSVText(ev.target.result);
+            state.isCustomCsv = true;
+            state.customFileName = file.name;
+            state.rawRows = parsedRows;
+            state.selectedLine = 'Todas';
+            renderAll();
+            showToast(`Archivo "${file.name}" procesado con éxito (${fmtInt(parsedRows.length)} radicados analizados en vivo).`, 'success');
+          } catch (err) {
+            showToast(`No se pudo procesar el CSV: ${err.message}`, 'error');
+          }
+        };
+        reader.onerror = () => {
+          showToast('Error al leer el archivo seleccionado.', 'error');
+        };
+        reader.readAsText(file, 'UTF-8');
+      });
+
+      // Restaurar base precargada
+      document.getElementById('btnResetData').addEventListener('click', () => {
+        state.isCustomCsv = false;
+        state.customFileName = '';
+        state.rawRows = null;
+        state.selectedLine = 'Todas';
+        state.excludeIntentos = false;
+        document.getElementById('toggleIntentos').checked = false;
+        renderAll();
+        showToast('Se restauró la base oficial precargada (corte 23 Nov 2026).', 'info');
+      });
+
+      // Switch de gobernanza (14 intentos anteriores sin anular)
+      document.getElementById('toggleIntentos').addEventListener('change', (e) => {
+        state.excludeIntentos = e.target.checked;
+        renderAll();
+      });
+
+      // Cambio de vista en gráfico principal (Apilado / Agrupado / 100%)
+      document.querySelectorAll('.chart-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.chartMode = btn.dataset.chartMode;
+          document.querySelectorAll('.chart-mode-btn').forEach(b => {
+            const isActive = b === btn;
+            b.className = isActive
+              ? 'chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer bg-white text-navy-900 shadow-sm'
+              : 'chart-mode-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-600 hover:text-navy-900';
+          });
+          renderMainChart(computeDashboardData());
+        });
+      });
+
+      // Ordenamiento de tabla
+      document.querySelectorAll('.sortable-th').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.sort;
+          if (state.sortKey === key) {
+            state.sortDir = state.sortDir === 'desc' ? 'asc' : 'desc';
+          } else {
+            state.sortKey = key;
+            state.sortDir = key === 'nombre' || key === 'linea' ? 'asc' : 'desc';
+          }
+          renderTable(computeDashboardData());
+        });
+      });
+
+      // Búsqueda en tabla
+      document.getElementById('tableSearchInput').addEventListener('input', (e) => {
+        state.tableQuery = e.target.value;
+        renderTable(computeDashboardData());
+      });
+
+      // Exportar tabla CSV
+      document.getElementById('btnDownloadCsv').addEventListener('click', downloadSummaryCsv);
+
+      // Imprimir / Exportar PDF
+      document.getElementById('btnPrintPdf').addEventListener('click', () => {
+        window.print();
+      });
+    }
+
+    // Inicialización al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+      bindEvents();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
